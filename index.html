@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BFD Shanghai 26 Check-Out (Manual/Auto)</title>
+<title>BFD Shanghai 26 Check-In/Out</title>
 <style>
 body {
   font-family: Arial, sans-serif;
@@ -24,8 +24,7 @@ button:hover { background-color: #2980b9; }
 
 <img class="logo" src="https://242329549.fs1.hubspotusercontent-na2.net/hubfs/242329549/crm-properties-file-values/Shanghai%20Final%20Logo.png" alt="BFD Shanghai 26 Logo">
 
-<h1>BFD Shanghai 26 Check-Out</h1>
-<h2>Manual/Staff Auto Check-Out</h2>
+<h1>BFD Shanghai 26 Check-In/Out</h1>
 
 <p id="status">Please enter your name or wait if auto-submitting...</p>
 
@@ -37,8 +36,9 @@ button:hover { background-color: #2980b9; }
 </form>
 
 <script>
-const webhookURL = "https://hook.eu1.make.com/pdz3obto9me2epspeq6iyq3yfjh5o1ou?event=shanghai&action=check-out&day=1";
+const webhookURL = "https://hook.eu1.make.com/pdz3obto9me2epspeq6iyq3yfjh5o1ou"; // Replace with your webhook
 
+// --- Send data to webhook ---
 function sendData(auto=false) {
   const fname = document.getElementById('fname').value.trim();
   const lname = document.getElementById('lname').value.trim();
@@ -48,34 +48,40 @@ function sendData(auto=false) {
 
   document.getElementById('status').textContent = "Submitting...";
 
+  // Read URL parameters for action and day
+  const params = new URLSearchParams(window.location.search);
+  const action = params.get("action") || "check-out";
+  const day = params.get("day") || "1";
+
   fetch(webhookURL, {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({
       fname,
       lname,
+      action,
+      day,
       source: auto ? "staff-auto" : "staff-manual",
       timestamp: new Date().toISOString()
     })
   })
   .then(() => {
-    document.getElementById('status').textContent = `Check-out recorded for ${formattedName}!`;
+    document.getElementById('status').textContent = `${formattedName} ${action} recorded for day ${day}!`;
     document.getElementById('checkoutForm').style.display = 'none';
-    // optional: auto-close tab if auto
-    if(auto) setTimeout(() => window.close(), 1500);
+    if(auto) setTimeout(()=>window.close(), 1500);
   })
   .catch(() => {
     document.getElementById('status').textContent = "Error sending data. Please try again.";
   });
 }
 
-// Manual submit
+// --- Manual submit ---
 document.getElementById('checkoutForm').addEventListener('submit', e=>{
   e.preventDefault();
   sendData(false);
 });
 
-// Prefill + Auto-submit
+// --- Prefill + Auto-submit ---
 window.addEventListener('DOMContentLoaded', ()=>{
   const params = new URLSearchParams(window.location.search);
   const fname = params.get("prefill_fname");
@@ -86,7 +92,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
   if(lname) document.getElementById('lname').value = lname;
 
   if(auto==='true' && fname && lname){
-    // small timeout to ensure DOM ready
     setTimeout(()=>sendData(true), 100);
   }
 });
