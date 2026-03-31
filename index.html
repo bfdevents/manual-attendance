@@ -1,17 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BFD Shanghai 26 Check-Out (Manual/Auto)</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  margin-top: 50px;
+  background-color: #f9f9f9;
+}
+.logo { max-width: 150px; margin-bottom: 20px; }
+h1 { color: #2c3e50; }
+p { color: #555; }
+input, button { padding: 10px; margin: 10px 0; width: 220px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; }
+button { background-color: #3498db; color: white; border: none; cursor: pointer; }
+button:hover { background-color: #2980b9; }
+#status { margin-top: 20px; color: green; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<img class="logo" src="https://242329549.fs1.hubspotusercontent-na2.net/hubfs/242329549/crm-properties-file-values/Shanghai%20Final%20Logo.png" alt="BFD Shanghai 26 Logo">
+
+<h1>BFD Shanghai 26 Check-Out</h1>
+<h2>Manual/Staff Auto Check-Out</h2>
+
+<p id="status">Please enter your name or wait if auto-submitting...</p>
+
+<form id="checkoutForm">
+  <input type="text" id="fname" placeholder="First Name" required />
+  <input type="text" id="lname" placeholder="Last Name" required />
+  <br>
+  <button type="submit">Submit</button>
+</form>
+
 <script>
-// --- Send data function ---
-function sendData(auto = false) {
-  const fnameInput = document.getElementById('fname');
-  const lnameInput = document.getElementById('lname');
+const webhookURL = "https://hook.eu1.make.com/pdz3obto9me2epspeq6iyq3yfjh5o1ou?event=shanghai&action=check-out&day=1";
 
-  const fname = fnameInput.value.trim();
-  const lname = lnameInput.value.trim();
+function sendData(auto=false) {
+  const fname = document.getElementById('fname').value.trim();
+  const lname = document.getElementById('lname').value.trim();
+  if(!fname || !lname) return;
 
-  if (!fname || !lname) return;
+  const formattedName = `${fname.charAt(0).toUpperCase()+fname.slice(1).toLowerCase()} ${lname.charAt(0).toUpperCase()+lname.slice(1).toLowerCase()}`;
 
-  const name = `${fname.charAt(0).toUpperCase() + fname.slice(1).toLowerCase()} ${lname.charAt(0).toUpperCase() + lname.slice(1).toLowerCase()}`;
+  document.getElementById('status').textContent = "Submitting...";
 
-  fetch("https://hook.eu1.make.com/pdz3obto9me2epspeq6iyq3yfjh5o1ou?event=shanghai&action=check-out&day=1", {
+  fetch(webhookURL, {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({
@@ -20,27 +57,40 @@ function sendData(auto = false) {
       source: auto ? "staff-auto" : "staff-manual",
       timestamp: new Date().toISOString()
     })
-  }).then(() => {
-    document.body.innerHTML = `<h1 style="text-align:center; color:green; font-family:Arial, sans-serif;">${name} check-out recorded successfully!</h1>`;
-    // auto-close after 1.5s
-    if (auto) setTimeout(() => window.close(), 1500);
-  }).catch(() => alert("Error sending data"));
+  })
+  .then(() => {
+    document.getElementById('status').textContent = `Check-out recorded for ${formattedName}!`;
+    document.getElementById('checkoutForm').style.display = 'none';
+    // optional: auto-close tab if auto
+    if(auto) setTimeout(() => window.close(), 1500);
+  })
+  .catch(() => {
+    document.getElementById('status').textContent = "Error sending data. Please try again.";
+  });
 }
 
-// --- Prefill + Auto-submit ---
-window.addEventListener("DOMContentLoaded", () => {
+// Manual submit
+document.getElementById('checkoutForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  sendData(false);
+});
+
+// Prefill + Auto-submit
+window.addEventListener('DOMContentLoaded', ()=>{
   const params = new URLSearchParams(window.location.search);
   const fname = params.get("prefill_fname");
   const lname = params.get("prefill_lname");
   const auto = params.get("auto");
 
-  if (fname) document.getElementById("fname").value = fname;
-  if (lname) document.getElementById("lname").value = lname;
+  if(fname) document.getElementById('fname').value = fname;
+  if(lname) document.getElementById('lname').value = lname;
 
-  // Auto-submit if auto=true and both names exist
-  if (auto === "true" && fname && lname) {
-    // use setTimeout to ensure everything is ready
-    setTimeout(() => sendData(true), 100);
+  if(auto==='true' && fname && lname){
+    // small timeout to ensure DOM ready
+    setTimeout(()=>sendData(true), 100);
   }
 });
 </script>
+
+</body>
+</html>
