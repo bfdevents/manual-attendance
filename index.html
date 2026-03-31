@@ -66,14 +66,18 @@ function sendData(auto=false) {
     })
   })
   .then(() => {
-    document.getElementById('status').textContent = `${formattedName} ${action} recorded for day ${day}!`;
-    document.getElementById('checkoutForm').style.display = 'none';
-    if(auto) setTimeout(()=>window.location.href = "https://airtable.com/appJw66wFLvrbTgdX/shr66ErW4qkngZuy7";
-  }, 3000);
-  })
-  .catch(() => {
-    document.getElementById('status').textContent = "Error sending data. Please try again.";
-  });
+  document.getElementById('status').textContent = `${formattedName} ${action} recorded for day ${day}!`;
+  document.getElementById('checkoutForm').style.display = 'none';
+
+  if (auto) {
+    setTimeout(() => {
+      window.location.href = "https://airtable.com/appJw66wFLvrbTgdX/shr66ErW4qkngZuy7";
+    }, 3000);
+  }
+})
+.catch(() => {
+  document.getElementById('status').textContent = "Error sending data. Please try again.";
+});
 }
 
 // --- Manual submit ---
