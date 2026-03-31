@@ -1,89 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BFD Shanghai 26 Check-Out (Manual)</title>
-
-<style>
-body {
-  font-family: Arial, sans-serif;
-  text-align: center;
-  margin-top: 50px;
-  background-color: #f9f9f9;
-}
-
-.logo {
-  max-width: 150px;
-  margin-bottom: 20px;
-}
-
-h1, h2 {
-  color: #2c3e50;
-}
-
-p {
-  color: #555;
-}
-
-input, button {
-  padding: 10px;
-  margin: 10px 0;
-  width: 220px;
-  font-size: 16px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-}
-
-button {
-  background-color: #3498db;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #2980b9;
-}
-
-#status {
-  margin-top: 20px;
-  color: green;
-  font-weight: bold;
-}
-</style>
-</head>
-
-<body>
-
-<img class="logo" src="https://242329549.fs1.hubspotusercontent-na2.net/hubfs/242329549/crm-properties-file-values/Shanghai%20Final%20Logo.png" alt="BFD Shanghai 26 Logo">
-
-<h1>BFD Shanghai 26 Check-Out</h1>
-<h2>Manual Staff Check-Out</h2>
-<p>Staff can submit attendance manually.</p>
-
-<form id="checkoutForm">
-  <input type="text" id="fname" placeholder="First Name" required />
-  <input type="text" id="lname" placeholder="Last Name" required />
-  <br>
-  <button type="submit">Submit</button>
-</form>
-
-<p id="status"></p>
-
 <script>
-const webhookURL = "https://hook.eu1.make.com/pdz3obto9me2epspeq6iyq3yfjh5o1ou?event=shanghai&action=check-out&day=1";
-
-const form = document.getElementById('checkoutForm');
-const status = document.getElementById('status');
-
-// Handle manual submit
-form.addEventListener('submit', function(e) {
-  e.preventDefault();
-  sendData();
-});
-
-// Send data function
+// --- Send data function ---
 function sendData(auto = false) {
   const fnameInput = document.getElementById('fname');
   const lnameInput = document.getElementById('lname');
@@ -91,18 +7,11 @@ function sendData(auto = false) {
   const fname = fnameInput.value.trim();
   const lname = lnameInput.value.trim();
 
-  if (!fname || !lname) {
-    alert("Please enter both first and last name.");
-    return;
-  }
+  if (!fname || !lname) return;
 
-  const formattedFname = fname.charAt(0).toUpperCase() + fname.slice(1).toLowerCase();
-  const formattedLname = lname.charAt(0).toUpperCase() + lname.slice(1).toLowerCase();
-  const name = `${formattedFname} ${formattedLname}`;
+  const name = `${fname.charAt(0).toUpperCase() + fname.slice(1).toLowerCase()} ${lname.charAt(0).toUpperCase() + lname.slice(1).toLowerCase()}`;
 
-  status.textContent = "Submitting...";
-
-  fetch(webhookURL, {
+  fetch("https://hook.eu1.make.com/pdz3obto9me2epspeq6iyq3yfjh5o1ou?event=shanghai&action=check-out&day=1", {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({
@@ -111,45 +20,27 @@ function sendData(auto = false) {
       source: auto ? "staff-auto" : "staff-manual",
       timestamp: new Date().toISOString()
     })
-  })
-  .then(() => {
-    document.body.innerHTML = `
-      <div style="text-align:center; margin-top:50px; font-family:Arial,sans-serif;">
-        <img src="https://242329549.fs1.hubspotusercontent-na2.net/hubfs/242329549/crm-properties-file-values/Shanghai%20Final%20Logo.png" style="max-width:200px; margin-bottom:20px;" alt="BFD Shanghai 26 Logo">
-        <h1 style="color:#27ae60;">Check-Out Recorded</h1>
-        <p style="font-size:18px; color:#555;">${name} has been successfully checked out.</p>
-      </div>
-    `;
-
-    // Optional auto-close
-    setTimeout(() => window.close(), 1500);
-
-  })
-  .catch(() => {
-    alert("Error sending data. Try again.");
-  });
+  }).then(() => {
+    document.body.innerHTML = `<h1 style="text-align:center; color:green; font-family:Arial, sans-serif;">${name} check-out recorded successfully!</h1>`;
+    // auto-close after 1.5s
+    if (auto) setTimeout(() => window.close(), 1500);
+  }).catch(() => alert("Error sending data"));
 }
 
-// PREFILL + AUTO-SUBMIT
-window.addEventListener("DOMContentLoaded", function () {
+// --- Prefill + Auto-submit ---
+window.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
-
   const fname = params.get("prefill_fname");
   const lname = params.get("prefill_lname");
   const auto = params.get("auto");
 
-  const fnameInput = document.getElementById("fname");
-  const lnameInput = document.getElementById("lname");
+  if (fname) document.getElementById("fname").value = fname;
+  if (lname) document.getElementById("lname").value = lname;
 
-  if (fname && fnameInput) fnameInput.value = fname;
-  if (lname && lnameInput) lnameInput.value = lname;
-
-  // Auto-submit if auto=true and both values exist
+  // Auto-submit if auto=true and both names exist
   if (auto === "true" && fname && lname) {
-    sendData(true);
+    // use setTimeout to ensure everything is ready
+    setTimeout(() => sendData(true), 100);
   }
 });
 </script>
-
-</body>
-</html>
